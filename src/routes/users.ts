@@ -76,7 +76,6 @@ export const userRoutes = new Elysia({ prefix: '/users' })
     }
   )
 
-  // Update current user profile
   .put(
     '/me',
     async ({ body, user, set }) => {
@@ -115,7 +114,6 @@ export const userRoutes = new Elysia({ prefix: '/users' })
     }
   )
 
-  // Get all users (for admin purposes)
   .get(
     '/',
     async ({ query, set }) => {
