@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  hashedPassword String
+  avatar        String?
+  status        UserStatus @default(OFFLINE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  hostedRooms    Room[]        @relation("RoomHost")
+  participants   Participant[]
+  chatMessages   ChatMessage[]
+  emojiReactions EmojiReaction[]
+  sessions       UserSession[]
+
+  @@map("users")
+}
+
+model Room {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  hostId          String
+  isPrivate       Boolean  @default(false)
+  password        String?
+  maxParticipants Int      @default(50)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  host         User          @relation("RoomHost", fields: [hostId], references: [id], onDelete: Cascade)
+  participants Participant[]
+  chatMessages ChatMessage[]
+
+  @@map("rooms")
+}
+
+model Participant {
+  id              String   @id @default(cuid())
+  userId          String
+  roomId          String
+  isAudioMuted    Boolean  @default(false)
+  isVideoMuted    Boolean  @default(false)
+  isScreenSharing Boolean  @default(false)
+  hasHandRaised   Boolean  @default(false)
+  joinedAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+  @@map("participants")
+}
+
+model ChatMessage {
+  id        String        @id @default(cuid())
+  roomId    String
+  userId    String
+  message   String
+  type      MessageType   @default(TEXT)
+  timestamp DateTime      @default(now())
+
+  room      Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions EmojiReaction[]
+
+  @@map("chat_messages")
+}
+
+model EmojiReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  timestamp DateTime @default(now())
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("emoji_reactions")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+    
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+enum UserStatus {
+  ONLINE
+  AWAY
+  BUSY
+  OFFLINE
+}
+
+enum MessageType {
+  TEXT
+  EMOJI
+  SYSTEM
+}

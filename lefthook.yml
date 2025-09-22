@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: 'src/**/*.{ts,js}'
+      run: bun run lint
+    format-check:
+      glob: '*.{ts,js,json,md,yml,yaml}'
+      run: bun run format:check
+
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: bun run test
