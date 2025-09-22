@@ -16,6 +16,8 @@
 /build
 /dist
 .env
+.idea
+.vscode
 # misc
 .DS_Store
 *.pem
